@@ -94,6 +94,27 @@ def get_invoice(inv_id):
             invoice['items'] = []
         return jsonify(invoice)
 
+@app.route('/api/invoices/<int:inv_id>', methods=['PUT'])
+def update_invoice(inv_id):
+    data = request.json
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.cursor()
+        cur.execute('''
+            UPDATE invoices SET title = ?, amount = ?, date = ?, items = ?, photo_url = ?
+            WHERE id = ?
+        ''', (
+            data.get('title'),
+            data.get('amount', 0),
+            data.get('date'),
+            json.dumps(data.get('items', [])),
+            data.get('photo_url'),
+            inv_id
+        ))
+        if cur.rowcount == 0:
+            return jsonify({"error": "Invoice not found"}), 404
+        conn.commit()
+    return jsonify(data)
+
 @app.route('/api/invoices', methods=['POST'])
 def add_invoice():
     data = request.json
@@ -135,4 +156,5 @@ def home():
 if __name__ == '__main__':
 
     app.run(port=int(os.environ.get("PORT", 5000)))
+
 

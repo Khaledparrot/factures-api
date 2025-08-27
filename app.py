@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
+import json
 import os
 
 app = Flask(__name__)
@@ -94,7 +95,7 @@ def add_invoice():
             data.get('title'),
             data.get('amount', 0),
             data.get('date'),
-            str(data.get('items', [])),
+            json.dumps(data.get('items', [])),
             data.get('photo_url')
         ))
         conn.commit()
@@ -117,4 +118,5 @@ def home():
     return "Factures API is running!"
 
 if __name__ == '__main__':
+
     app.run(port=int(os.environ.get("PORT", 5000)))

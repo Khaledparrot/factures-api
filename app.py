@@ -79,6 +79,21 @@ def get_invoices():
         invoices = [dict(row) for row in rows]
     return jsonify(invoices)
 
+@app.route('/api/invoices/<int:inv_id>', methods=['GET'])
+def get_invoice(inv_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
+        if not row:
+            return jsonify({"error": "Invoice not found"}), 404
+        invoice = dict(row)
+        # Parse items from JSON string
+        try:
+            invoice['items'] = json.loads(invoice['items']) if invoice['items'] else []
+        except (json.JSONDecodeError, TypeError):
+            invoice['items'] = []
+        return jsonify(invoice)
+
 @app.route('/api/invoices', methods=['POST'])
 def add_invoice():
     data = request.json
@@ -120,3 +135,4 @@ def home():
 if __name__ == '__main__':
 
     app.run(port=int(os.environ.get("PORT", 5000)))
+
